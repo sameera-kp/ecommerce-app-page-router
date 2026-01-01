@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { Product } from "../../types/product";
+import { Product } from "@/types/product";
 
 interface Props {
   product: Product;
   showOffer?: boolean;
 }
+
 export default function ProductCard({ product, showOffer = false }: Props) {
-  if (!product) return null; // ⚡ prevent crash
+  if (!product) return null;
 
   return (
     <div className="card h-100 position-relative">
@@ -14,15 +15,17 @@ export default function ProductCard({ product, showOffer = false }: Props) {
         <span className="badge bg-danger position-absolute top-0 start-0 m-2">OFFER</span>
       )}
       <img
-        src={product.image}
+        src={product?.image ?? "/placeholder.png"}
         className="card-img-top p-3"
         style={{ height: "220px", objectFit: "contain" }}
-        alt={product.title}
+        alt={product?.title ?? "Product"}
       />
       <div className="card-body">
-        <h6>{product.title}</h6>
-        <p className="fw-bold">${product.price}</p>
-        <Link href={`/products/${product.id}`} className="btn btn-primary w-100">View Details</Link>
+        <h6>{product?.title ?? "No Title"}</h6>
+        <p className="fw-bold">${product?.price ?? 0}</p>
+        <Link href={`/products/${product?.id ?? "#"}`} className="btn btn-primary w-100">
+          View Details
+        </Link>
       </div>
     </div>
   );
