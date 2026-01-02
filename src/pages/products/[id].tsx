@@ -1,15 +1,14 @@
 import { GetServerSideProps } from "next";
-import { useRouter } from "next/router";
 import { Product } from "../../types/product";
 import Navbar from "../components/Navbar";
+import ProductCard from "../components/ProductCard";
 
 interface Props {
   product: Product | null;
+  products: Product[]; // for related / other products
 }
 
-export default function ProductDetails({ product }: Props) {
-  const router = useRouter();
-
+export default function ProductDetails({ product, products }: Props) {
   if (!product) {
     return (
       <div>
@@ -19,30 +18,46 @@ export default function ProductDetails({ product }: Props) {
     );
   }
 
+  const relatedProducts = products
+    .filter((p) => p.id !== product.id)
+    .slice(0, 4);
+
   return (
     <div>
       <Navbar />
+
+      {/* Main Product */}
       <div className="container my-5">
         <div className="row">
           <div className="col-md-6 text-center">
             <img
               src={product.image}
               alt={product.title}
-              style={{ maxWidth: "300px" }}
+              style={{ maxWidth: "300px", objectFit: "contain" }}
             />
           </div>
-
           <div className="col-md-6">
             <h2>{product.title}</h2>
             <h4 className="text-success">${product.price}</h4>
             <p>{product.description}</p>
-
-            <button className="btn btn-primary mt-3">
-              Add to Cart
-            </button>
+            <button className="btn btn-primary mt-3">Add to Cart</button>
           </div>
         </div>
       </div>
+
+      {/* Related Products */}
+      {relatedProducts.length > 0 && (
+        <div className="container my-5">
+          <h3 className="mb-4 text-center">🔥 You may also like</h3>
+          <div className="row">
+            {relatedProducts.map((p) => (
+              <div key={p.id} className="col-md-3 mb-4">
+                <ProductCard product={p} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -51,15 +66,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params!;
 
   try {
-    const res = await fetch(`https://fakestoreapi.com/products/${id}`);
-    const product = await res.json();
+    const [productRes, productsRes] = await Promise.all([
+      fetch(`https://fakestoreapi.com/products/${id}`),
+      fetch("https://fakestoreapi.com/products"),
+    ]);
+
+    const product = await productRes.json();
+    const products: Product[] = await productsRes.json();
 
     return {
-      props: { product },
+      props: { product, products },
     };
   } catch (error) {
     return {
-      props: { product: null },
+      props: { product: null, products: [] },
     };
   }
 };
