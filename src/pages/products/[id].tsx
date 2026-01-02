@@ -5,7 +5,7 @@ import ProductCard from "../components/ProductCard";
 
 interface Props {
   product: Product | null;
-  products: Product[]; // for related / other products
+  products: Product[]; // all products for related items
 }
 
 export default function ProductDetails({ product, products }: Props) {
@@ -18,12 +18,14 @@ export default function ProductDetails({ product, products }: Props) {
     );
   }
 
+  // show 4 related products excluding current one
   const relatedProducts = products
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
 
   return (
     <div>
+      {/* Navbar */}
       <Navbar />
 
       {/* Main Product */}
@@ -66,12 +68,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params!;
 
   try {
-    const [productRes, productsRes] = await Promise.all([
-      fetch(`https://fakestoreapi.com/products/${id}`),
-      fetch("https://fakestoreapi.com/products"),
-    ]);
-
+    // Fetch main product
+    const productRes = await fetch(`https://fakestoreapi.com/products/${id}`);
     const product = await productRes.json();
+
+    // Fetch all products (for related products)
+    const productsRes = await fetch("https://fakestoreapi.com/products");
     const products: Product[] = await productsRes.json();
 
     return {
