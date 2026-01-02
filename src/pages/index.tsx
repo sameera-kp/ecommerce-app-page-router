@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function Home({ products }: Props) {
-  const offerProducts = products.slice(0, 4); // example offers
+  const offerProducts = Array.isArray(products) ? products.slice(0, 4) : [];
 
   return (
     <div>
@@ -28,7 +28,25 @@ export default function Home({ products }: Props) {
 }
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const res = await fetch("https://fakestoreapi.com/products");
-  const products: Product[] = await res.json();
-  return { props: { products } };
+  try {
+    const res = await fetch("https://fakestoreapi.com/products");
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch products");
+    }
+
+    const products: Product[] = await res.json();
+
+    return {
+      props: { products },
+    };
+  } catch (error) {
+    console.error("API Error:", error);
+
+    return {
+      props: {
+        products: [],
+      },
+    };
+  }
 };
