@@ -1,14 +1,24 @@
-import { GetStaticProps } from "next";
+import { useEffect, useState } from "react";
 import { Product } from "../types/product";
 import ProductCard from "./components/ProductCard";
 import Navbar from "./components/Navbar";
 
-interface Props {
-  products: Product[];
-}
+export default function Home() {
+  const [products, setProducts] = useState<Product[]>([]);
 
-export default function Home({ products }: Props) {
-  const offerProducts = Array.isArray(products) ? products.slice(0, 4) : [];
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("https://fakestoreapi.com/products");
+        const data = await res.json();
+        setProducts(data);
+      } catch (error) {
+        console.error("Fetch failed", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <div>
@@ -16,13 +26,11 @@ export default function Home({ products }: Props) {
       <div className="container my-4">
         <h2 className="mb-4 text-center">🔥 Today's Offers</h2>
 
-        {offerProducts.length === 0 ? (
-          <p className="text-center text-muted">
-            No products available
-          </p>
+        {products.length === 0 ? (
+          <p className="text-center text-muted">Loading products...</p>
         ) : (
           <div className="row">
-            {offerProducts.map((product) => (
+            {products.slice(0, 4).map((product) => (
               <div key={product.id} className="col-md-3 mb-4">
                 <ProductCard product={product} showOffer />
               </div>
@@ -33,19 +41,3 @@ export default function Home({ products }: Props) {
     </div>
   );
 }
-
-export const getStaticProps: GetStaticProps = async () => {
-  try {
-    const res = await fetch("https://fakestoreapi.com/products");
-    const products = await res.json();
-
-    return {
-      props: { products },
-      revalidate: 60, // refresh every 1 minute
-    };
-  } catch (error) {
-    return {
-      props: { products: [] },
-    };
-  }
-};
