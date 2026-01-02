@@ -1,16 +1,17 @@
-import { GetServerSideProps } from "next";
-import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
-import { Product } from "../../types/product";
 import Navbar from "../components/Navbar";
+import { Product } from "../../types/product";
 
-export default function Products({ products }: { products: Product[] }) {
-  const router = useRouter();
-  const search = router.query.search?.toString().toLowerCase() || "";
-
-  const filtered = products.filter(p =>
-    p.title.toLowerCase().includes(search)
-  );
+export default function Products() {
+  const [products, setProducts] = useState<Product[]>([]);
+  
+  useEffect(() => {
+    fetch("https://fakestoreapi.com/products")
+      .then(res => res.json())
+      .then(setProducts)
+      .catch(console.error);
+  }, []);
 
   return (
     <>
@@ -18,9 +19,9 @@ export default function Products({ products }: { products: Product[] }) {
       <div className="container my-4">
         <h3>Products</h3>
         <div className="row">
-          {filtered.map(product => (
-            <div key={product.id} className="col-md-3 mb-4">
-              <ProductCard product={product} />
+          {products.map(p => (
+            <div key={p.id} className="col-md-3 mb-4">
+              <ProductCard product={p} />
             </div>
           ))}
         </div>
@@ -28,16 +29,3 @@ export default function Products({ products }: { products: Product[] }) {
     </>
   );
 }
-export const getServerSideProps: GetServerSideProps = async () => {
-  try {
-    const res = await fetch("https://fakestoreapi.com/products");
-    if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-
-    const products: Product[] = await res.json();
-
-    return { props: { products } };
-  } catch (err) {
-    console.error(err);
-    return { props: { products: [] } }; // fallback to empty array
-  }
-};
