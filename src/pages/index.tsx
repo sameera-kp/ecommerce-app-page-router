@@ -1,4 +1,4 @@
-import { GetServerSideProps } from "next";
+import { GetStaticProps } from "next";
 import { Product } from "../types/product";
 import ProductCard from "./components/ProductCard";
 import Navbar from "./components/Navbar";
@@ -15,38 +15,37 @@ export default function Home({ products }: Props) {
       <Navbar />
       <div className="container my-4">
         <h2 className="mb-4 text-center">🔥 Today's Offers</h2>
-        <div className="row">
-          {offerProducts.map((product) => (
-            <div key={product.id} className="col-md-3 mb-4">
-              <ProductCard product={product} showOffer />
-            </div>
-          ))}
-        </div>
+
+        {offerProducts.length === 0 ? (
+          <p className="text-center text-muted">
+            No products available
+          </p>
+        ) : (
+          <div className="row">
+            {offerProducts.map((product) => (
+              <div key={product.id} className="col-md-3 mb-4">
+                <ProductCard product={product} showOffer />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getStaticProps: GetStaticProps = async () => {
   try {
     const res = await fetch("https://fakestoreapi.com/products");
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch products");
-    }
-
-    const products: Product[] = await res.json();
+    const products = await res.json();
 
     return {
       props: { products },
+      revalidate: 60, // refresh every 1 minute
     };
   } catch (error) {
-    console.error("API Error:", error);
-
     return {
-      props: {
-        products: [],
-      },
+      props: { products: [] },
     };
   }
 };
