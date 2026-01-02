@@ -19,10 +19,8 @@ export default function ProductDetails({ product, products }: Props) {
     );
   }
 
-  // Get 4 related products (exclude current)
-  const relatedProducts = products
-    .filter((p) => p.id !== product.id)
-    .slice(0, 4);
+  // Related products: 4 products excluding current
+  const relatedProducts = products.filter((p) => p.id !== product.id).slice(0, 4);
 
   return (
     <div>
@@ -46,7 +44,7 @@ export default function ProductDetails({ product, products }: Props) {
       {/* Main Product */}
       <div className="container my-5">
         <div className="row">
-          {/* Product Image */}
+          {/* Image */}
           <div className="col-md-6 text-center">
             <img
               src={product.image}
@@ -55,7 +53,7 @@ export default function ProductDetails({ product, products }: Props) {
             />
           </div>
 
-          {/* Product Details */}
+          {/* Details */}
           <div className="col-md-6">
             <h2>{product.title}</h2>
             <h4 className="text-success">${product.price}</h4>
@@ -82,15 +80,19 @@ export default function ProductDetails({ product, products }: Props) {
   );
 }
 
-// Fetch product + all products for related section
+// Fetch product + all products
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { id } = context.params!;
+  const id = Number(context.params!.id); // convert to number
 
   try {
     const [productRes, productsRes] = await Promise.all([
-      fetch(`https://fakestoreapi.com/products/${id}`),
-      fetch("https://fakestoreapi.com/products"),
+      fetch(`https://fakestoreapi.com/products/${id}`, { cache: "no-store" }),
+      fetch("https://fakestoreapi.com/products", { cache: "no-store" }),
     ]);
+
+    if (!productRes.ok) {
+      return { props: { product: null, products: [] } };
+    }
 
     const product: Product = await productRes.json();
     const products: Product[] = await productsRes.json();
