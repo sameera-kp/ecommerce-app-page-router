@@ -2,10 +2,11 @@ import { GetServerSideProps } from "next";
 import { Product } from "../../types/product";
 import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
+import Link from "next/link";
 
 interface Props {
   product: Product | null;
-  products: Product[]; // all products for related items
+  products: Product[];
 }
 
 export default function ProductDetails({ product, products }: Props) {
@@ -18,7 +19,7 @@ export default function ProductDetails({ product, products }: Props) {
     );
   }
 
-  // show 4 related products excluding current one
+  // Get 4 related products (exclude current)
   const relatedProducts = products
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
@@ -28,16 +29,33 @@ export default function ProductDetails({ product, products }: Props) {
       {/* Navbar */}
       <Navbar />
 
+      {/* Breadcrumb */}
+      <div className="container mt-3">
+        <nav aria-label="breadcrumb">
+          <ol className="breadcrumb">
+            <li className="breadcrumb-item">
+              <Link href="/">Home</Link>
+            </li>
+            <li className="breadcrumb-item active" aria-current="page">
+              {product.title}
+            </li>
+          </ol>
+        </nav>
+      </div>
+
       {/* Main Product */}
       <div className="container my-5">
         <div className="row">
+          {/* Product Image */}
           <div className="col-md-6 text-center">
             <img
               src={product.image}
               alt={product.title}
-              style={{ maxWidth: "300px", objectFit: "contain" }}
+              style={{ maxWidth: "350px", objectFit: "contain" }}
             />
           </div>
+
+          {/* Product Details */}
           <div className="col-md-6">
             <h2>{product.title}</h2>
             <h4 className="text-success">${product.price}</h4>
@@ -64,16 +82,17 @@ export default function ProductDetails({ product, products }: Props) {
   );
 }
 
+// Fetch product + all products for related section
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params!;
 
   try {
-    // Fetch main product
-    const productRes = await fetch(`https://fakestoreapi.com/products/${id}`);
-    const product = await productRes.json();
+    const [productRes, productsRes] = await Promise.all([
+      fetch(`https://fakestoreapi.com/products/${id}`),
+      fetch("https://fakestoreapi.com/products"),
+    ]);
 
-    // Fetch all products (for related products)
-    const productsRes = await fetch("https://fakestoreapi.com/products");
+    const product: Product = await productRes.json();
     const products: Product[] = await productsRes.json();
 
     return {
