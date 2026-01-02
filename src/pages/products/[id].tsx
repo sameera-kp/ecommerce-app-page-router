@@ -80,11 +80,17 @@ export default function ProductDetails({ product, products }: Props) {
   );
 }
 
-// Fetch product + all products
+// Fetch product + all products for related section
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const id = Number(context.params!.id); // convert to number
 
+  if (isNaN(id)) {
+    // invalid ID → show not found
+    return { props: { product: null, products: [] } };
+  }
+
   try {
+    // Fetch product and all products
     const [productRes, productsRes] = await Promise.all([
       fetch(`https://fakestoreapi.com/products/${id}`, { cache: "no-store" }),
       fetch("https://fakestoreapi.com/products", { cache: "no-store" }),
@@ -101,8 +107,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: { product, products },
     };
   } catch (error) {
-    return {
-      props: { product: null, products: [] },
-    };
+    console.error("Error fetching product:", error);
+    return { props: { product: null, products: [] } };
   }
 };
